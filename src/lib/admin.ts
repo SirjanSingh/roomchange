@@ -1,9 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 
-const ADMIN_EMAIL = "23ucs715@lnmiit.ac.in";
-
-export { ADMIN_EMAIL };
-
 export async function isAdmin(userId: string): Promise<boolean> {
   const supabase = await createClient();
   const { data } = await supabase

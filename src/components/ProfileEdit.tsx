@@ -7,6 +7,7 @@ import { updateProfile } from "@/app/actions";
 import type { Profile } from "@/lib/types";
 
 const ROLL_REGEX = /^\d{2}[A-Za-z]{2,5}\d{3}$/;
+const PHONE_REGEX = /^\d{10}$/
 
 export function ProfileEdit({ profile }: { profile: Profile }) {
   const router = useRouter();
@@ -54,8 +55,20 @@ export function ProfileEdit({ profile }: { profile: Profile }) {
       return;
     }
 
+    if (phone.trim() && !PHONE_REGEX.test(phone.trim())) {
+      setError("Phone number must be exactly 10 digits.");
+      setLoading(false);
+      return;
+    }
+
     if (!currentHostel || !currentFloor || !currentRoom.trim()) {
       setError("Please fill in all room details.");
+      setLoading(false);
+      return;
+    }
+
+    if (!/^\d{3}$/.test(currentRoom.trim())) {
+      setError("Room number must be exactly 3 digits (e.g. 204).");
       setLoading(false);
       return;
     }
@@ -147,7 +160,10 @@ export function ProfileEdit({ profile }: { profile: Profile }) {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="10-digit mobile number"
+                inputMode="numeric"
+                maxLength={10}
                 className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -235,8 +251,11 @@ export function ProfileEdit({ profile }: { profile: Profile }) {
               <input
                 type="text"
                 value={currentRoom}
-                onChange={(e) => setCurrentRoom(e.target.value)}
+                onChange={(e) => setCurrentRoom(e.target.value.replace(/\D/g, "").slice(0, 3))}
                 placeholder="e.g. 214"
+                maxLength={3}
+                pattern="\d{3}"
+                inputMode="numeric"
                 className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />

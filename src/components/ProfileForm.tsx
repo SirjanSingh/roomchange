@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { HOSTELS, getHostel } from "@/lib/hostelConfig";
 
 const ROLL_REGEX = /^\d{2}[A-Za-z]{2,5}\d{3}$/;
-const ADMIN_EMAIL = "23ucs715@lnmiit.ac.in";
+const PHONE_REGEX = /^\d{10}$/
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
 export function ProfileForm({
   userId,
@@ -38,6 +39,12 @@ export function ProfileForm({
       setError(
         "Invalid roll number format. Expected format like 22UCS001 or 12ABC123.",
       );
+      setLoading(false);
+      return;
+    }
+
+    if (phone.trim() && !PHONE_REGEX.test(phone.trim())) {
+      setError("Phone number must be exactly 10 digits.");
       setLoading(false);
       return;
     }
@@ -163,7 +170,10 @@ export function ProfileForm({
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="10-digit mobile number"
+              inputMode="numeric"
+              maxLength={10}
               className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -244,7 +254,7 @@ export function ProfileForm({
                 <input
                   type="text"
                   value={currentRoom}
-                  onChange={(e) => setCurrentRoom(e.target.value)}
+                  onChange={(e) => setCurrentRoom(e.target.value.replace(/\D/g, "").slice(0, 3))}
                   placeholder="e.g. 214"
                   maxLength={3}
                   pattern="\d{3}"
