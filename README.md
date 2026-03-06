@@ -158,4 +158,4 @@ Optional sample records are in `supabase/seed.sql`.
 
 ## License
 
-No license file is currently committed. Add a `LICENSE` file before public distribution.
+This project is licensed under the MIT License. See `LICENSE` for details.
