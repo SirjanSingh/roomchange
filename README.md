@@ -1,118 +1,161 @@
 # LNMIIT Room Exchange
 
-A web app for LNMIIT hostel students to swap rooms with each other.
+Room swapping platform for LNMIIT hostel students.
 
-## Features
+The app helps students publish room preferences, find compatible swaps, exchange offers, and join wait-queues for target room types.
 
-- **LNMIIT-only auth**: Magic link login restricted to @lnmiit.ac.in emails
-- **Listings**: Create room swap listings (broad or exact match)
-- **Offers**: Send swap offers, accept/reject incoming offers
-- **Queue**: Join a queue for desired room types, see your position
-- **Match suggestions**: Top 3 automatic match suggestions with scoring
-- **Hostel validation**: BH1 (wings A/B, floors G-2), BH2 (wings A/B, floors G-2), BH3 (no wings, floors G-7)
-- **Duplicate prevention**: Same user cannot create duplicate listing preferences or join same queue twice
+## Highlights
+
+- LNMIIT-only authentication (`@lnmiit.ac.in`) enforced in auth callback
+- Google OAuth sign-in flow
+- Profile-first room setup (listings use profile room data)
+- Listings with broad or exact targeting
+- Offer workflow with accept/reject and auto-close on acceptance
+- Rate limiting on offer creation (10s cooldown)
+- Queue system with position tracking
+- Match suggestions (listing-level and aggregated)
+- Polling notifications in nav (incoming offers, new matches)
+- Admin panel for moderation:
+	- close/delete/hide listings
+	- block/unblock users
+	- inspect offers
 
 ## Tech Stack
 
-- Next.js 15 (App Router) + TypeScript + Tailwind CSS
-- Supabase (Auth + Postgres + RLS)
+- Next.js 16 (App Router, React 19, TypeScript)
+- Tailwind CSS v4
+- Supabase Auth + Postgres + RLS
 
-## Setup
+## Project Structure
 
-### 1. Clone and install
+```
+src/
+	app/
+		(protected)/
+			admin/
+			dashboard/
+			listings/
+			offers/
+			profile/
+			queue/
+		auth/
+	components/
+	lib/
+supabase/
+	migrations/
+	seed.sql
+```
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- A Supabase project
+
+## Quick Start
+
+1. Install dependencies
 
 ```bash
-git clone <repo-url>
-cd roomchange
 npm install
 ```
 
-### 2. Create Supabase project
-
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Copy your project URL and anon key
-
-### 3. Configure environment
+2. Create env file
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edit `.env.local` with your Supabase credentials:
+3. Set environment variables in `.env.local`
 
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_ADMIN_EMAIL=your-email@lnmiit.ac.in
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
 
-### 4. Run database migration
+4. Run DB migrations in Supabase SQL Editor (in order)
 
-1. Open the Supabase SQL Editor
-2. Paste and run the contents of `supabase/migrations/001_schema.sql`
-3. This creates all tables, constraints, RLS policies, and helper functions
+- `supabase/migrations/001_schema.sql`
+- `supabase/migrations/002_v2_schema.sql`
 
-### 5. Configure Supabase Auth
+5. Configure Supabase Auth
 
-1. In Supabase Dashboard > Authentication > Providers
-2. Enable Email provider with "Confirm email" or Magic Link
-3. In URL Configuration, add `http://localhost:3000/auth/callback` to Redirect URLs
+- Enable Google provider in Supabase Auth
+- Add redirect URL: `http://localhost:3000/auth/callback`
+- For production, add your deployed callback URL too
 
-### 6. Run locally
+6. Start development server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open `http://localhost:3000`.
+
+## Environment Variables
+
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anon key
+- `NEXT_PUBLIC_ADMIN_EMAIL`: auto-assigns `admin` role when that user saves profile
+
+## Scripts
+
+- `npm run dev`: start local development server
+- `npm run build`: production build
+- `npm run start`: start production server
+- `npm run lint`: run ESLint
+
+## Data + Validation Notes
+
+- Roll format: `12abc123` style (`2 digits + 2-5 letters + 3 digits`)
+- Room number: exactly 3 digits
+- Phone (optional): exactly 10 digits when provided
+- Listings include `hidden` flag for admin moderation
+
+## Main Routes
+
+- `/auth` - sign in
+- `/dashboard` - personal overview
+- `/profile` - edit profile and room data
+- `/listings` - browse + suggestions + filters
+- `/listings/new` - create listing
+- `/listings/[id]` - listing detail and offer actions
+- `/offers` - incoming/outgoing offers
+- `/queue` - queue memberships
+- `/admin` - admin listing moderation
+- `/admin/offers` - admin offer audit view
+
+## Open Source Contribution Guide
+
+1. Fork the repo
+2. Create a feature branch
+3. Keep changes scoped and include tests/validation where relevant
+4. Run `npm run lint` and `npm run build`
+5. Open a pull request with:
+	 - clear summary
+	 - screenshots for UI changes
+	 - migration notes if schema changed
+
+## Deployment
+
+Deploy on Vercel (recommended):
+
+1. Import repository
+2. Configure environment variables
+3. Ensure Supabase callback URL includes deployed `/auth/callback`
+4. Run migrations on production Supabase before releasing
+
+## Security Notes
+
+- RLS policies are required and defined in migrations
+- Admin checks are server-side via DB role (`profiles.role`)
+- Domain restriction is enforced during auth callback
 
 ## Seed Data
 
-See `supabase/seed.sql` for example data. Instructions are in the file comments.
-
-## Pages
-
-| Page             | Description                                               |
-| ---------------- | --------------------------------------------------------- |
-| `/auth`          | Login with LNMIIT email                                   |
-| `/dashboard`     | Profile, active listings, stats, quick links              |
-| `/listings`      | Browse all active listings with filters                   |
-| `/listings/new`  | Create a new room swap listing                            |
-| `/listings/[id]` | Listing details, send offer, join queue, view suggestions |
-| `/offers`        | Incoming and outgoing offers                              |
-| `/queue`         | Queue entries with position display                       |
-
-## Hostel Structure
-
-| Hostel | Wings | Floors                 |
-| ------ | ----- | ---------------------- |
-| BH1    | A, B  | G, 1, 2                |
-| BH2    | A, B  | G, 1, 2                |
-| BH3    | None  | G, 1, 2, 3, 4, 5, 6, 7 |
-
-## Queue Key Format
-
-- BH1/BH2 broad: `BH1-A-2` (hostel-wing-floor)
-- BH3 broad: `BH3-7` (hostel-floor)
-- Exact room: `BH1-A-2-214` or `BH3-7-708`
-
-## Match Scoring
-
-| Signal                                  | Points |
-| --------------------------------------- | ------ |
-| Room in desired hostel                  | +50    |
-| Wing match                              | +25    |
-| Floor match                             | +25    |
-| Floor in acceptable list                | +10    |
-| Mutual interest (they want your hostel) | +15    |
-| Exact room match                        | 100    |
-
-## Deploy to Vercel
-
-1. Push to GitHub
-2. Import in Vercel
-3. Add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Deploy
+Optional sample records are in `supabase/seed.sql`.
 
 ## License
 
-MIT
+No license file is currently committed. Add a `LICENSE` file before public distribution.
