@@ -3,6 +3,13 @@ export interface Profile {
   name: string;
   roll: string;
   phone: string | null;
+  current_hostel: string | null;
+  current_wing: string | null;
+  current_floor: string | null;
+  current_room: string | null;
+  room_updated_at: string | null;
+  role: "user" | "admin";
+  blocked: boolean;
   created_at: string;
 }
 
@@ -21,6 +28,7 @@ export interface Listing {
   desired_room: string | null;
   notes: string | null;
   status: "active" | "matched" | "closed";
+  hidden: boolean;
   pref_key: string;
   created_at: string;
   // joined

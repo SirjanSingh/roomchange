@@ -28,11 +28,11 @@ export default async function OffersPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-white">Offers</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-white">Offers</h1>
 
       {/* Incoming */}
       <div>
-        <h2 className="text-lg font-semibold text-white mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-white mb-4">
           Incoming Offers ({incomingOffers?.length || 0})
         </h2>
         {!incomingOffers?.length ? (
@@ -55,10 +55,10 @@ export default async function OffersPage() {
               return (
                 <div
                   key={offer.id}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-5"
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0">
                       <p className="text-white font-medium">
                         {profile?.name || "Unknown"}{" "}
                         <span className="text-gray-500 font-normal">
@@ -84,7 +84,7 @@ export default async function OffersPage() {
                       )}
                     </div>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
+                      className={`text-xs px-2 py-1 rounded-full self-start flex-shrink-0 ${
                         offer.status === "pending"
                           ? "bg-yellow-900/30 text-yellow-400"
                           : offer.status === "accepted"
@@ -99,7 +99,7 @@ export default async function OffersPage() {
                     <div className="mt-3">
                       <Link
                         href={`/listings/${listing?.id}`}
-                        className="text-blue-400 hover:text-blue-300 text-sm"
+                        className="text-blue-400 hover:text-blue-300 text-sm min-h-[44px] inline-flex items-center"
                       >
                         View listing to accept/reject -&gt;
                       </Link>
@@ -114,7 +114,7 @@ export default async function OffersPage() {
 
       {/* Outgoing */}
       <div>
-        <h2 className="text-lg font-semibold text-white mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-white mb-4">
           Outgoing Offers ({outgoingOffers?.length || 0})
         </h2>
         {!outgoingOffers?.length ? (
@@ -140,10 +140,10 @@ export default async function OffersPage() {
               return (
                 <div
                   key={offer.id}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-5"
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0">
                       <p className="text-white font-medium">
                         Offer on{" "}
                         <Link
@@ -166,7 +166,7 @@ export default async function OffersPage() {
                       </p>
                     </div>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
+                      className={`text-xs px-2 py-1 rounded-full self-start flex-shrink-0 ${
                         offer.status === "pending"
                           ? "bg-yellow-900/30 text-yellow-400"
                           : offer.status === "accepted"

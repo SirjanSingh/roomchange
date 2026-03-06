@@ -48,7 +48,7 @@ export default async function QueuePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">My Queue Entries</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-white mb-6">My Queue Entries</h1>
       <QueueList entries={entriesWithPosition} totalsMap={totalsMap} />
     </div>
   );

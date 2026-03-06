@@ -29,9 +29,15 @@ export default async function ProtectedLayout({
     .eq("id", user.id)
     .single();
 
+  const isAdminUser = profile?.role === "admin";
+
   return (
     <div className="min-h-screen bg-gray-950">
-      <Nav email={user.email || ""} hasProfile={!!profile} />
+      <Nav
+        email={user.email || ""}
+        hasProfile={!!profile}
+        isAdmin={isAdminUser}
+      />
       <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
     </div>
   );

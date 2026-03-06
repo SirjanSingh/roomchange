@@ -39,12 +39,12 @@ export function ListingFilters({
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4 mb-6">
+      <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 -mb-1 scrollbar-none">
         <select
           value={currentHostel || ""}
           onChange={(e) => updateFilter("hostel", e.target.value)}
-          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] flex-shrink-0"
         >
           <option value="">All Hostels</option>
           {hostels.map((h) => (
@@ -58,7 +58,7 @@ export function ListingFilters({
           <select
             value={currentWing || ""}
             onChange={(e) => updateFilter("wing", e.target.value)}
-            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] flex-shrink-0"
           >
             <option value="">All Wings</option>
             {selectedConfig.wings.map((w) => (
@@ -73,7 +73,7 @@ export function ListingFilters({
           <select
             value={currentFloor || ""}
             onChange={(e) => updateFilter("floor", e.target.value)}
-            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] flex-shrink-0"
           >
             <option value="">All Floors</option>
             {selectedConfig.floors.map((f) => (
@@ -87,7 +87,7 @@ export function ListingFilters({
         {(currentHostel || currentFloor || currentWing) && (
           <button
             onClick={clearFilters}
-            className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap flex-shrink-0 min-h-[44px]"
           >
             Clear Filters
           </button>

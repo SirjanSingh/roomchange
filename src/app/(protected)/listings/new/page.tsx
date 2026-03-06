@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { HOSTELS, getHostel } from "@/lib/hostelConfig";
@@ -9,12 +9,13 @@ export default function NewListingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Current room fields
-  const [currentHostel, setCurrentHostel] = useState("");
-  const [currentWing, setCurrentWing] = useState("");
-  const [currentFloor, setCurrentFloor] = useState("");
-  const [currentRoom, setCurrentRoom] = useState("");
+  const [profileRoom, setProfileRoom] = useState<{
+    current_hostel: string;
+    current_wing: string | null;
+    current_floor: string;
+    current_room: string;
+  } | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   // Desired fields
   const [desiredMode, setDesiredMode] = useState<"broad" | "exact">("broad");
@@ -25,16 +26,41 @@ export default function NewListingPage() {
   const [desiredRoom, setDesiredRoom] = useState("");
   const [notes, setNotes] = useState("");
 
-  const currentConfig = getHostel(currentHostel);
   const desiredConfig = getHostel(desiredHostel);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("current_hostel, current_wing, current_floor, current_room")
+        .eq("id", user.id)
+        .single();
+      if (
+        !profile?.current_hostel ||
+        !profile?.current_floor ||
+        !profile?.current_room
+      ) {
+        router.push("/profile");
+        return;
+      }
+      setProfileRoom(profile);
+      setLoadingProfile(false);
+    };
+    loadProfile();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    if (!currentHostel || !currentFloor || !currentRoom) {
-      setError("Please fill in all current room details.");
+    if (!profileRoom) {
+      setError("Profile room data missing. Please update your profile.");
       setLoading(false);
       return;
     }
@@ -45,6 +71,12 @@ export default function NewListingPage() {
     }
     if (desiredMode === "exact" && !desiredRoom) {
       setError("Exact mode requires a desired room number.");
+      setLoading(false);
+      return;
+    }
+
+    if (desiredMode === "exact" && !/^\d{3}$/.test(desiredRoom.trim())) {
+      setError("Desired room number must be exactly 3 digits (e.g. 204).");
       setLoading(false);
       return;
     }
@@ -60,19 +92,23 @@ export default function NewListingPage() {
       return;
     }
 
+    const currentConfig = getHostel(profileRoom.current_hostel);
+
     const { error: insertError } = await supabase.from("listings").insert({
       user_id: user.id,
-      current_hostel: currentHostel,
-      current_wing: currentConfig?.hasWings ? currentWing || null : null,
-      current_floor: currentFloor,
-      current_room: currentRoom,
+      current_hostel: profileRoom.current_hostel,
+      current_wing: currentConfig?.hasWings
+        ? profileRoom.current_wing
+        : null,
+      current_floor: profileRoom.current_floor,
+      current_room: profileRoom.current_room,
       desired_mode: desiredMode,
       desired_hostel: desiredHostel,
       desired_wing: desiredConfig?.hasWings ? desiredWing || null : null,
       desired_floor: desiredFloor || null,
       acceptable_floors: acceptableFloors.length > 0 ? acceptableFloors : null,
       desired_room: desiredMode === "exact" ? desiredRoom : null,
-      notes: notes.trim() || null,
+      notes: notes.trim().slice(0, 500) || null,
     });
 
     if (insertError) {
@@ -97,8 +133,23 @@ export default function NewListingPage() {
     );
   };
 
+  if (loadingProfile) {
+    return (
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-800 rounded w-1/3" />
+          <div className="h-64 bg-gray-800 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  const currentConfig = profileRoom
+    ? getHostel(profileRoom.current_hostel)
+    : null;
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4">
       <h1 className="text-2xl font-bold text-white mb-6">
         Create Room Swap Listing
       </h1>
@@ -109,94 +160,34 @@ export default function NewListingPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Current Room Section */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">
-            Your Current Room
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Hostel
-              </label>
-              <select
-                value={currentHostel}
-                onChange={(e) => {
-                  setCurrentHostel(e.target.value);
-                  setCurrentWing("");
-                  setCurrentFloor("");
-                }}
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select</option>
-                {HOSTELS.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {currentConfig?.hasWings && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Wing
-                </label>
-                <select
-                  value={currentWing}
-                  onChange={(e) => setCurrentWing(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select</option>
-                  {currentConfig.wings.map((w) => (
-                    <option key={w} value={w}>
-                      Wing {w}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Floor
-              </label>
-              <select
-                value={currentFloor}
-                onChange={(e) => setCurrentFloor(e.target.value)}
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select</option>
-                {currentConfig?.floors.map((f) => (
-                  <option key={f} value={f}>
-                    Floor {f}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Room Number
-              </label>
-              <input
-                type="text"
-                value={currentRoom}
-                onChange={(e) => setCurrentRoom(e.target.value)}
-                placeholder="e.g. 214"
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Current Room (read-only from profile) */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold text-white">
+              Your Current Room
+            </h2>
+            <a
+              href="/profile"
+              className="text-blue-400 text-xs hover:underline"
+            >
+              Change
+            </a>
+          </div>
+          <div className="inline-flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-2.5">
+            <span className="text-white font-medium">
+              {profileRoom?.current_hostel}
+              {currentConfig?.hasWings && profileRoom?.current_wing
+                ? `-${profileRoom.current_wing}`
+                : ""}
+              {" "}Floor {profileRoom?.current_floor}, Room{" "}
+              {profileRoom?.current_room}
+            </span>
           </div>
         </div>
 
         {/* Desired Room Section */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h2 className="text-lg font-semibold text-white mb-4">
             Desired Room
           </h2>
@@ -304,6 +295,9 @@ export default function NewListingPage() {
                   value={desiredRoom}
                   onChange={(e) => setDesiredRoom(e.target.value)}
                   placeholder="e.g. 308"
+                  maxLength={3}
+                  pattern="\d{3}"
+                  inputMode="numeric"
                   className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required={desiredMode === "exact"}
                 />
@@ -343,9 +337,13 @@ export default function NewListingPage() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
+              maxLength={500}
               placeholder="Any additional preferences or information..."
               className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
+            <p className="text-gray-600 text-xs mt-1">
+              {notes.length}/500 characters
+            </p>
           </div>
         </div>
 
