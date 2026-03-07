@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/admin";
-import type { Listing, MatchSuggestion } from "@/lib/types";
+import type { ListingWithProfile, MatchSuggestion } from "@/lib/types";
 
 // ─── Profile ───────────────────────────────────────────
 
@@ -74,10 +74,8 @@ export async function getMatchSuggestions(
   if (!myListing || myListing.user_id !== user.id) return [];
 
   const { data: otherListings } = await supabase
-    .from("listings")
-    .select("*, profiles(name, roll)")
-    .eq("status", "active")
-    .eq("hidden", false)
+    .from("listings_with_public_profile")
+    .select("*")
     .neq("user_id", user.id);
 
   if (!otherListings?.length) return [];
@@ -142,7 +140,7 @@ export async function getMatchSuggestions(
       }
     }
 
-    suggestions.push({ listing: other as Listing, score, reasons });
+    suggestions.push({ listing: other as ListingWithProfile, score, reasons });
   }
 
   return suggestions.sort((a, b) => b.score - a.score).slice(0, 3);
@@ -166,10 +164,8 @@ export async function getMyMatchSuggestions(): Promise<MatchSuggestion[]> {
   if (!myListings?.length) return [];
 
   const { data: otherListings } = await supabase
-    .from("listings")
-    .select("*, profiles(name, roll)")
-    .eq("status", "active")
-    .eq("hidden", false)
+    .from("listings_with_public_profile")
+    .select("*")
     .neq("user_id", user.id);
 
   if (!otherListings?.length) return [];
@@ -230,7 +226,7 @@ export async function getMyMatchSuggestions(): Promise<MatchSuggestion[]> {
 
       if (score > 0) {
         seen.add(other.id);
-        allSuggestions.push({ listing: other as Listing, score, reasons });
+        allSuggestions.push({ listing: other as ListingWithProfile, score, reasons });
       }
     }
   }
@@ -540,6 +536,49 @@ export async function adminToggleHideListing(
     .from("listings")
     .update({ hidden })
     .eq("id", listingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+// ─── Games ────────────────────────────────────────────────────────────────
+export async function submitGameScore(
+  game: string,
+  score: number,
+  playerName: string,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  if (!Number.isInteger(score) || score < 0 || score > 9999) {
+    return { error: "Invalid score" };
+  }
+
+  // Only keep the personal best — skip if the current stored score is >= new score.
+  const { data: existing } = await supabase
+    .from("game_scores")
+    .select("score")
+    .eq("user_id", user.id)
+    .eq("game", game)
+    .maybeSingle();
+
+  if (existing && existing.score >= score) {
+    return { success: true, skipped: true };
+  }
+
+  // Upsert: insert on first run, update on subsequent runs if score improved.
+  const { error } = await supabase.from("game_scores").upsert(
+    {
+      user_id: user.id,
+      game,
+      score,
+      player_name: playerName.trim().slice(0, 30) || "Anonymous",
+    },
+    { onConflict: "user_id,game" },
+  );
 
   if (error) return { error: error.message };
   return { success: true };

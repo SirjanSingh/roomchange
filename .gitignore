@@ -46,6 +46,9 @@ next-env.d.ts
 /supabase/.branches
 /supabase/.temp
 
+# temp / scratch
+/.tmp/
+
 # editors
 .vscode/*
 !.vscode/extensions.json

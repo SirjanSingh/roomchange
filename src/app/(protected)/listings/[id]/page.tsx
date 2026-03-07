@@ -16,8 +16,8 @@ export default async function ListingDetailPage({
   if (!user) return null;
 
   const { data: listing } = await supabase
-    .from("listings")
-    .select("*, profiles(name, roll, phone)")
+    .from("listings_with_public_profile")
+    .select("*")
     .eq("id", id)
     .single();
 

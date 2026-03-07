@@ -12,6 +12,7 @@ const links = [
   { href: "/listings", label: "Listings" },
   { href: "/offers", label: "Offers" },
   { href: "/queue", label: "Queue" },
+  { href: "/games", label: "Games" },
   { href: "/profile", label: "Profile" },
 ];
 

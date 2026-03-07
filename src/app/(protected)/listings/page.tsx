@@ -29,10 +29,9 @@ export default async function ListingsPage({
   } = await supabase.auth.getUser();
 
   let query = supabase
-    .from("listings")
-    .select("*, profiles(name, roll)")
+    .from("listings_with_public_profile")
+    .select("*")
     .eq("status", "active")
-    .eq("hidden", false)
     .order("created_at", { ascending: false });
 
   if (params.hostel) {
@@ -81,10 +80,6 @@ export default async function ListingsPage({
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
             {suggestions.map((s) => {
-              const profile = s.listing.profiles as unknown as {
-                name: string;
-                roll: string;
-              } | null;
               return (
                 <Link
                   key={s.listing.id}
@@ -103,7 +98,7 @@ export default async function ListingsPage({
                     </span>
                   </div>
                   <p className="text-gray-400 text-xs mb-2">
-                    {profile?.name || "Unknown"} ({profile?.roll || ""})
+                    {s.listing.user_name || "Unknown"} ({s.listing.user_roll || ""})
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {s.reasons.map((r, j) => (
@@ -133,10 +128,6 @@ export default async function ListingsPage({
           <p className="text-gray-500 text-sm">{listings.length} listings</p>
           {listings.map((listing) => {
             const isOwn = listing.user_id === user?.id;
-            const profile = listing.profiles as unknown as {
-              name: string;
-              roll: string;
-            } | null;
             return (
               <Link
                 key={listing.id}
@@ -165,7 +156,7 @@ export default async function ListingsPage({
                     </div>
                     <div className="flex items-center gap-3 text-sm text-gray-500">
                       <span>
-                        {profile?.name || "Unknown"} ({profile?.roll || ""})
+                        {listing.user_name || "Unknown"} ({listing.user_roll || ""})
                       </span>
                       <span>
                         {listing.desired_mode === "exact"

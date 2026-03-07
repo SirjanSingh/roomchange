@@ -38,8 +38,6 @@ export function ListingDetail({
   const [confirmClose, setConfirmClose] = useState(false);
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
 
-  const profile = listing.profiles as any;
-
   useEffect(() => {
     if (isOwner && listing.status === "active") {
       setLoadingSuggestions(true);
@@ -191,11 +189,14 @@ export function ListingDetail({
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
         <h3 className="text-sm font-medium text-gray-500 mb-2">Listed By</h3>
         <p className="text-white font-medium">
-          {profile?.name || "Unknown"}{" "}
+          {listing.user_name || "Unknown"}{" "}
           <span className="text-gray-500 font-normal">
-            ({profile?.roll || ""})
+            ({listing.user_roll || ""})
           </span>
         </p>
+        {listing.user_email && (
+          <p className="text-gray-400 text-sm mt-1">{listing.user_email}</p>
+        )}
         {listing.notes && (
           <p className="text-gray-400 text-sm mt-2">{listing.notes}</p>
         )}

@@ -58,8 +58,14 @@ export interface QueueEntry {
   created_at: string;
 }
 
+export interface ListingWithProfile extends Omit<Listing, "profiles"> {
+  user_name: string;
+  user_roll: string;
+  user_email: string;
+}
+
 export interface MatchSuggestion {
-  listing: Listing;
+  listing: ListingWithProfile;
   score: number;
   reasons: string[];
 }
