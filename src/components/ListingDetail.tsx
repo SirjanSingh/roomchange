@@ -190,10 +190,14 @@ export function ListingDetail({
         <h3 className="text-sm font-medium text-gray-500 mb-2">Listed By</h3>
         <p className="text-white font-medium">
           {listing.user_name || "Unknown"}{" "}
-          <span className="text-gray-500 font-normal">
-            ({listing.user_roll || ""})
-          </span>
-        </p>
+         <p className="text-white font-medium">
+           {listing.user_name || "Unknown"}{" "}
+           {listing.user_roll && (
+             <span className="text-gray-500 font-normal">
+               ({listing.user_roll})
+             </span>
+           )}
+         </p>        </p>
         {listing.user_email && (
           <p className="text-gray-400 text-sm mt-1">{listing.user_email}</p>
         )}
