@@ -39,8 +39,8 @@ export default async function ListingDetailPage({
   let offers = null;
   if (isOwner) {
     const { data } = await supabase
-      .from("offers")
-      .select("*, profiles:from_user_id(name, roll)")
+      .from("offers_with_public_profile")
+      .select("*")
       .eq("to_listing_id", id)
       .order("created_at", { ascending: false });
     offers = data;

@@ -28,14 +28,25 @@ const FIRST_PIPE_DELAY = 110;
 const MIN_DIST = 220;
 const MAX_DIST = 330;
 
-// Use the reference repo's image style:
-// - bg.png from background asset
-// - sprite.png from sprite sheet
-// Optional:
-// - profile.png to replace bird sprite with your own image/avatar.
-const IMG_BG = "/games/bg.png";
-const IMG_SPRITE = "/games/sprite.png";
+// Custom graphics — drop any of these PNG files into /public/games/:
+//   bg.png        — full background image
+//   bird.png      — single custom bird (static, all frames)
+//   bird1.png … bird4.png — 4-frame animated bird (used if all 4 present)
+//   pipe.png      — pipe body (opening assumed at top; top pipe is flipped)
+//   floor.png     — floor tile (tiled horizontally)
+//   profile.png   — circular avatar that replaces the bird entirely
+// Sprite sheet fallback (used when individual files are absent):
+//   sprite.png    — original sprite sheet
+const IMG_BG      = "/games/bg.png";
+const IMG_SPRITE  = "/games/sprite.png";
 const IMG_PROFILE = "/games/profile.png";
+const IMG_BIRD    = "/games/bird.png";
+const IMG_BIRD1   = "/games/bird1.png";
+const IMG_BIRD2   = "/games/bird2.png";
+const IMG_BIRD3   = "/games/bird3.png";
+const IMG_BIRD4   = "/games/bird4.png";
+const IMG_PIPE    = "/games/pipe.png";
+const IMG_FLOOR   = "/games/floor.png";
 
 // Sprite sheet source rectangles (from reference repo).
 const SPRITE_BIRD_W = 70;
@@ -108,22 +119,27 @@ export function FlappyBird({
 
   // Preload images; if unavailable, fallback drawing is used.
   const imgs = useRef<Record<string, HTMLImageElement | null>>({
-    bg: null,
-    sprite: null,
-    profile: null,
+    bg: null, sprite: null, profile: null,
+    bird: null, bird1: null, bird2: null, bird3: null, bird4: null,
+    pipe: null, floor: null,
   });
 
   useEffect(() => {
     const tryLoad = (key: string, src: string) => {
       const img = new Image();
-      img.onload = () => {
-        imgs.current[key] = img;
-      };
+      img.onload = () => { imgs.current[key] = img; };
       img.src = src;
     };
-    tryLoad("bg", IMG_BG);
-    tryLoad("sprite", IMG_SPRITE);
+    tryLoad("bg",      IMG_BG);
+    tryLoad("sprite",  IMG_SPRITE);
     tryLoad("profile", IMG_PROFILE);
+    tryLoad("bird",   IMG_BIRD);
+    tryLoad("bird1",  IMG_BIRD1);
+    tryLoad("bird2",  IMG_BIRD2);
+    tryLoad("bird3",  IMG_BIRD3);
+    tryLoad("bird4",  IMG_BIRD4);
+    tryLoad("pipe",   IMG_PIPE);
+    tryLoad("floor",  IMG_FLOOR);
   }, []);
 
   // Main game loop.
@@ -203,6 +219,15 @@ export function FlappyBird({
     };
 
     const drawFloor = () => {
+      // Priority: floor.png > sprite sheet > canvas fallback
+      if (imgs.current.floor) {
+        const tileW = imgs.current.floor.naturalWidth || 30;
+        const tilesNeeded = Math.ceil(W / tileW) + 2;
+        for (let i = 0; i < tilesNeeded; i++) {
+          ctx.drawImage(imgs.current.floor, floorX + i * tileW, GROUND_Y, tileW, FLOOR_H);
+        }
+        return;
+      }
       if (imgs.current.sprite) {
         const tilesNeeded = Math.ceil(W / 30) + 2;
         for (let i = 0; i < tilesNeeded; i++) {
@@ -234,6 +259,7 @@ export function FlappyBird({
       ctx.rotate((Math.PI / 180) * birdAngle);
 
       if (imgs.current.profile) {
+        // Circular avatar — highest priority
         ctx.save();
         ctx.beginPath();
         ctx.arc(0, 0, BIRD_H / 2, 0, Math.PI * 2);
@@ -246,6 +272,17 @@ export function FlappyBird({
         ctx.beginPath();
         ctx.arc(0, 0, BIRD_H / 2, 0, Math.PI * 2);
         ctx.stroke();
+      } else if (
+        imgs.current.bird1 && imgs.current.bird2 &&
+        imgs.current.bird3 && imgs.current.bird4
+      ) {
+        // 4-frame animated custom bird
+        const frameIndex = Math.floor(frame / 8) % 4;
+        const frames = [imgs.current.bird1, imgs.current.bird2, imgs.current.bird3, imgs.current.bird4];
+        ctx.drawImage(frames[frameIndex]!, -BIRD_W / 2, -BIRD_H / 2, BIRD_W, BIRD_H);
+      } else if (imgs.current.bird) {
+        // Single static custom bird
+        ctx.drawImage(imgs.current.bird, -BIRD_W / 2, -BIRD_H / 2, BIRD_W, BIRD_H);
       } else if (imgs.current.sprite) {
         const frameIndex = Math.floor(frame / 8) % 4;
         ctx.drawImage(
@@ -296,6 +333,20 @@ export function FlappyBird({
 
     const drawPipe = (p: Pipe) => {
       const botY = p.topH + p.gap;
+
+      // Priority: pipe.png > sprite sheet > canvas fallback
+      if (imgs.current.pipe) {
+        const bottomH = Math.max(0, GROUND_Y - botY);
+        // Top pipe: flip vertically so the opening faces downward
+        ctx.save();
+        ctx.translate(p.x + PIPE_W / 2, p.topH / 2);
+        ctx.scale(1, -1);
+        ctx.drawImage(imgs.current.pipe, -PIPE_W / 2, -p.topH / 2, PIPE_W, p.topH);
+        ctx.restore();
+        // Bottom pipe: normal orientation, opening faces upward
+        ctx.drawImage(imgs.current.pipe, p.x, botY, PIPE_W, bottomH);
+        return;
+      }
 
       if (imgs.current.sprite) {
         const topSrcY = Math.max(0, SPRITE_PIPE_Y_BASE - p.topH);

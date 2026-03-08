@@ -12,7 +12,9 @@ interface OfferRow {
   status: string;
   message: string | null;
   created_at: string;
-  from_profile: { name: string; roll: string } | null;
+  sender_name: string | null;
+  sender_roll: string | null;
+  sender_email: string | null;
   listing: {
     current_hostel: string;
     current_wing: string | null;
@@ -36,9 +38,9 @@ export default function AdminOffersPage() {
   const fetchOffers = useCallback(async () => {
     setLoading(true);
     let query = supabase
-      .from("offers")
+      .from("offers_with_public_profile")
       .select(
-        "*, from_profile:profiles!offers_from_user_id_fkey(name, roll), listing:listings(current_hostel, current_wing, current_room, profiles(name, roll))",
+        "*, listing:listings(current_hostel, current_wing, current_room, profiles(name, roll))",
         { count: "exact" },
       )
       .order("created_at", { ascending: false })
@@ -106,7 +108,6 @@ export default function AdminOffersPage() {
       ) : (
         <div className="space-y-3">
           {offers.map((offer) => {
-            const from = offer.from_profile;
             const listing = offer.listing;
             const owner = listing?.profiles;
             return (
@@ -118,10 +119,10 @@ export default function AdminOffersPage() {
                   <div className="min-w-0 space-y-1">
                     <p className="text-white text-sm">
                       <span className="font-medium">
-                        {from?.name || "Unknown"}
+                        {offer.sender_name || "Unknown"}
                       </span>{" "}
                       <span className="text-gray-500">
-                        ({from?.roll || "?"})
+                        ({offer.sender_roll || "?"})
                       </span>
                       <span className="text-gray-600 mx-2">→</span>
                       <span className="text-blue-400">

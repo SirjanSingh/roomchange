@@ -31,11 +31,11 @@ export default async function DashboardPage() {
 
   // Fetch incoming offers (offers on my listings) using listing IDs
   const myListingIds = (listings || []).map((l) => l.id);
-  let incomingOffers: { id: string; from_user_id: string; to_listing_id: string; status: string; created_at: string; profiles: { name: string; roll: string } | null }[] = [];
+  let incomingOffers: { id: string; from_user_id: string; to_listing_id: string; status: string; created_at: string; sender_name: string | null; sender_roll: string | null; sender_email: string | null }[] = [];
   if (myListingIds.length > 0) {
     const { data, error: inErr } = await supabase
-      .from("offers")
-      .select("id, from_user_id, to_listing_id, status, created_at, profiles:from_user_id(name, roll)")
+      .from("offers_with_public_profile")
+      .select("id, from_user_id, to_listing_id, status, created_at, sender_name, sender_roll, sender_email")
       .in("to_listing_id", myListingIds)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
@@ -126,8 +126,6 @@ export default async function DashboardPage() {
           </h2>
           <div className="space-y-2">
             {incomingOffers.slice(0, 5).map((offer) => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const p = offer.profiles as any;
               const targetListing = listings?.find((l) => l.id === offer.to_listing_id);
               return (
                 <Link
@@ -137,9 +135,9 @@ export default async function DashboardPage() {
                 >
                   <div className="min-w-0">
                     <p className="text-white text-sm font-medium truncate">
-                      {p?.name || "Unknown"}{" "}
+                      {offer.sender_name || "Unknown"}{" "}
                       <span className="text-gray-500 font-normal">
-                        ({p?.roll || ""})
+                        ({offer.sender_roll || ""})
                       </span>
                     </p>
                     {targetListing && (

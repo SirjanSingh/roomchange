@@ -33,13 +33,15 @@ export function GamesClient({ playerName }: { playerName: string }) {
             </li>
             <li>• Tap or click the game on mobile</li>
             <li>• Dodge the pipes to keep scoring</li>
-            <li>• Submit your score after each run</li>
-            {/* <li className="text-gray-600 pt-1">
-              Custom graphics: add PNG files to{" "}
-              <span className="text-gray-500 font-mono">/public/games/</span>
+            <li>• Score auto-saves your personal best after each run</li>
+            <li className="text-gray-600 pt-1">
+              Custom graphics — drop PNGs into{" "}
+              <span className="text-gray-500 font-mono">/public/games/</span>:
               <br />
-              (sprite.png, bg.png, optional profile.png)
-            </li> */}
+              <span className="text-gray-600">
+                bg · bird · bird1–4 · pipe · floor · profile
+              </span>
+            </li>
           </ul>
         </div>
 

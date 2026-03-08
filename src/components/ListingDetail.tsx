@@ -190,14 +190,12 @@ export function ListingDetail({
         <h3 className="text-sm font-medium text-gray-500 mb-2">Listed By</h3>
         <p className="text-white font-medium">
           {listing.user_name || "Unknown"}{" "}
-         <p className="text-white font-medium">
-           {listing.user_name || "Unknown"}{" "}
-           {listing.user_roll && (
-             <span className="text-gray-500 font-normal">
-               ({listing.user_roll})
-             </span>
-           )}
-         </p>        </p>
+          {listing.user_roll && (
+            <span className="text-gray-500 font-normal">
+              ({listing.user_roll})
+            </span>
+          )}
+        </p>
         {listing.user_email && (
           <p className="text-gray-400 text-sm mt-1">{listing.user_email}</p>
         )}
@@ -282,7 +280,6 @@ export function ListingDetail({
             ) : (
               <div className="space-y-3">
                 {offers.map((offer: any) => {
-                  const offerProfile = offer.profiles as any;
                   return (
                     <div
                       key={offer.id}
@@ -291,11 +288,14 @@ export function ListingDetail({
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-white font-medium">
-                            {offerProfile?.name || "Unknown"}
+                            {offer.sender_name || "Unknown"}
                             <span className="text-gray-500 font-normal ml-2">
-                              ({offerProfile?.roll || ""})
+                              ({offer.sender_roll || ""})
                             </span>
                           </p>
+                          {offer.sender_email && (
+                            <p className="text-gray-400 text-xs">{offer.sender_email}</p>
+                          )}
                           {offer.message && (
                             <p className="text-gray-400 text-sm mt-1">
                               &quot;{offer.message}&quot;

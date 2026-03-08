@@ -10,10 +10,8 @@ export default async function OffersPage() {
 
   // Incoming offers (on my listings)
   const { data: incomingOffers } = await supabase
-    .from("offers")
-    .select(
-      "*, listings!inner(id, current_hostel, current_wing, current_room, current_floor, user_id), profiles:from_user_id(name, roll)",
-    )
+    .from("offers_with_public_profile")
+    .select("*, listings!inner(id, current_hostel, current_wing, current_room, current_floor, user_id)")
     .eq("listings.user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -42,10 +40,6 @@ export default async function OffersPage() {
         ) : (
           <div className="space-y-3">
             {incomingOffers.map((offer) => {
-              const profile = offer.profiles as unknown as {
-                name: string;
-                roll: string;
-              } | null;
               const listing = offer.listings as unknown as {
                 id: string;
                 current_hostel: string;
@@ -60,11 +54,14 @@ export default async function OffersPage() {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-white font-medium">
-                        {profile?.name || "Unknown"}{" "}
+                        {offer.sender_name || "Unknown"}{" "}
                         <span className="text-gray-500 font-normal">
-                          ({profile?.roll || ""})
+                          ({offer.sender_roll || ""})
                         </span>
                       </p>
+                      {offer.sender_email && (
+                        <p className="text-gray-400 text-xs">{offer.sender_email}</p>
+                      )}
                       <p className="text-gray-400 text-sm mt-1">
                         Wants to swap for your{" "}
                         <Link
